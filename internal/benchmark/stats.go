@@ -9,6 +9,11 @@ type Sample struct {
 	TTFT             time.Duration
 	E2E              time.Duration
 	CompletionTokens int
+	StartedAt        time.Time
+	FinishedAt       time.Time
+	Worker           string
+	Attempts         int
+	RequestID        string
 }
 
 type LatencyStats struct {

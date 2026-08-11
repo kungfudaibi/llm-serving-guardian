@@ -26,6 +26,9 @@ func TestRequestMeasuresStreamingResponseAndReadsUsage(t *testing.T) {
 		}
 
 		w.Header().Set("Content-Type", "text/event-stream")
+		w.Header().Set("X-Guardian-Worker", "gpu-one")
+		w.Header().Set("X-Guardian-Attempts", "2")
+		w.Header().Set("X-Request-Id", "request-one")
 		flusher := w.(http.Flusher)
 		fmt.Fprint(w, "data: {\"choices\":[{\"delta\":{\"content\":\"hello\"}}]}\n\n")
 		flusher.Flush()
@@ -44,6 +47,12 @@ func TestRequestMeasuresStreamingResponseAndReadsUsage(t *testing.T) {
 	if sample.CompletionTokens != 2 || sample.TTFT <= 0 || sample.E2E < sample.TTFT {
 		t.Fatalf("sample = %+v", sample)
 	}
+	if sample.Worker != "gpu-one" || sample.Attempts != 2 || sample.RequestID != "request-one" {
+		t.Fatalf("routing metadata = %+v", sample)
+	}
+	if sample.StartedAt.IsZero() || sample.FinishedAt.Before(sample.StartedAt) {
+		t.Fatalf("request timestamps = %+v", sample)
+	}
 }
 
 func TestRequestRejectsSuccessfulStreamWithoutUsage(t *testing.T) {
@@ -59,5 +68,28 @@ func TestRequestRejectsSuccessfulStreamWithoutUsage(t *testing.T) {
 	})
 	if err == nil || err.Error() != "stream did not include completion token usage" {
 		t.Fatalf("error = %v", err)
+	}
+}
+
+func TestRequestPreservesMetadataWhenStreamFails(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("X-Guardian-Worker", "gpu-zero")
+		w.Header().Set("X-Guardian-Attempts", "1")
+		w.Header().Set("X-Request-Id", "request-failed")
+		fmt.Fprint(w, "data: {\"choices\":[{\"delta\":{\"content\":\"partial\"}}]}\n\n")
+	}))
+	defer server.Close()
+
+	sample, err := Request(t.Context(), server.Client(), RequestOptions{
+		Endpoint: server.URL, Model: "test-model", Prompt: "hello", MaxTokens: 16,
+	})
+	if err == nil {
+		t.Fatal("Request() unexpectedly accepted a stream without usage")
+	}
+	if sample.Worker != "gpu-zero" || sample.Attempts != 1 || sample.RequestID != "request-failed" {
+		t.Fatalf("routing metadata = %+v", sample)
+	}
+	if sample.StartedAt.IsZero() || sample.FinishedAt.Before(sample.StartedAt) || sample.E2E <= 0 {
+		t.Fatalf("failed request timestamps = %+v", sample)
 	}
 }

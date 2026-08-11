@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -68,14 +69,18 @@ func Request(ctx context.Context, client *http.Client, options RequestOptions) (
 		req.Header.Set("Authorization", "Bearer "+options.APIKey)
 	}
 	started := time.Now()
+	sample := Sample{StartedAt: started}
 	resp, err := client.Do(req)
 	if err != nil {
-		return Sample{}, fmt.Errorf("send request: %w", err)
+		return finishSample(sample, started), fmt.Errorf("send request: %w", err)
 	}
 	defer resp.Body.Close()
+	sample.Worker = resp.Header.Get("X-Guardian-Worker")
+	sample.RequestID = resp.Header.Get("X-Request-Id")
+	sample.Attempts, _ = strconv.Atoi(resp.Header.Get("X-Guardian-Attempts"))
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		body, _ := io.ReadAll(io.LimitReader(resp.Body, 4096))
-		return Sample{}, fmt.Errorf("server returned %d: %s", resp.StatusCode, strings.TrimSpace(string(body)))
+		return finishSample(sample, started), fmt.Errorf("server returned %d: %s", resp.StatusCode, strings.TrimSpace(string(body)))
 	}
 
 	var firstToken time.Time
@@ -93,26 +98,33 @@ func Request(ctx context.Context, client *http.Client, options RequestOptions) (
 		}
 		var chunk chatChunk
 		if err := json.Unmarshal([]byte(data), &chunk); err != nil {
-			return Sample{}, fmt.Errorf("decode stream event: %w", err)
+			return finishSample(sample, started), fmt.Errorf("decode stream event: %w", err)
 		}
 		for _, choice := range chunk.Choices {
 			if firstToken.IsZero() && choice.Delta.Content != "" {
 				firstToken = time.Now()
+				sample.TTFT = firstToken.Sub(started)
 			}
 		}
 		if chunk.Usage != nil {
 			completionTokens = chunk.Usage.CompletionTokens
 		}
 	}
-	finished := time.Now()
 	if err := scanner.Err(); err != nil {
-		return Sample{}, fmt.Errorf("read stream: %w", err)
+		return finishSample(sample, started), fmt.Errorf("read stream: %w", err)
 	}
 	if firstToken.IsZero() {
-		return Sample{}, errors.New("stream did not include a content token")
+		return finishSample(sample, started), errors.New("stream did not include a content token")
 	}
 	if completionTokens < 0 {
-		return Sample{}, errors.New("stream did not include completion token usage")
+		return finishSample(sample, started), errors.New("stream did not include completion token usage")
 	}
-	return Sample{TTFT: firstToken.Sub(started), E2E: finished.Sub(started), CompletionTokens: completionTokens}, nil
+	sample.CompletionTokens = completionTokens
+	return finishSample(sample, started), nil
+}
+
+func finishSample(sample Sample, started time.Time) Sample {
+	sample.FinishedAt = time.Now()
+	sample.E2E = sample.FinishedAt.Sub(started)
+	return sample
 }
