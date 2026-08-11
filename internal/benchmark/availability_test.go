@@ -2,6 +2,7 @@ package benchmark
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -53,6 +54,11 @@ func TestRunAvailabilityContinuesAfterIndividualFailuresAndPollsWorkers(t *testi
 	if successes == 0 || failures == 0 || len(attempts) < 4 {
 		t.Fatalf("attempts did not continue across errors: %+v", attempts)
 	}
+	for _, attempt := range attempts {
+		if !attempt.Success && attempt.Error != "upstream_response_failed" {
+			t.Fatalf("failure category = %q", attempt.Error)
+		}
+	}
 	if len(observations) < 2 || len(observations[0].Workers) != 1 {
 		t.Fatalf("worker observations = %+v", observations)
 	}
@@ -60,6 +66,56 @@ func TestRunAvailabilityContinuesAfterIndividualFailuresAndPollsWorkers(t *testi
 		if attempts[index].StartedAt.Before(attempts[index-1].StartedAt) {
 			t.Fatalf("attempts are not chronological: %+v", attempts)
 		}
+	}
+}
+
+func TestRunAvailabilityRejectsMissingWorkerEvidence(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/admin/workers" {
+			http.Error(w, "unavailable", http.StatusServiceUnavailable)
+			return
+		}
+		fmt.Fprint(w, "data: {\"choices\":[{\"delta\":{\"content\":\"ok\"}}]}\n\n")
+		fmt.Fprint(w, "data: {\"choices\":[],\"usage\":{\"completion_tokens\":1}}\n\n")
+	}))
+	defer server.Close()
+
+	_, _, err := RunAvailability(t.Context(), server.Client(), AvailabilityRunOptions{
+		Request:       RequestOptions{Endpoint: server.URL + "/v1/chat/completions", Model: "test", Prompt: "test", MaxTokens: 1},
+		AdminEndpoint: server.URL + "/admin/workers", Duration: 20 * time.Millisecond, Concurrency: 1, PollInterval: 5 * time.Millisecond,
+	})
+	if err == nil || err.Error() != "no successful worker observations" {
+		t.Fatalf("error = %v", err)
+	}
+}
+
+func TestAvailabilityAttemptDoesNotStoreRawErrors(t *testing.T) {
+	attempt := availabilityAttempt(Sample{StartedAt: time.Now(), FinishedAt: time.Now(), StreamStarted: true}, errors.New("secret response body"))
+	if attempt.Error != "stream_incomplete" || strings.Contains(attempt.Error, "secret") {
+		t.Fatalf("error category = %q", attempt.Error)
+	}
+}
+
+func TestRunAvailabilityStopsAtRequestLimit(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/admin/workers" {
+			fmt.Fprint(w, `[{"name":"gpu-zero","isHealthy":true,"circuitState":"CLOSED"}]`)
+			return
+		}
+		fmt.Fprint(w, "data: {\"choices\":[{\"delta\":{\"content\":\"ok\"}}]}\n\n")
+		fmt.Fprint(w, "data: {\"choices\":[],\"usage\":{\"completion_tokens\":1}}\n\n")
+	}))
+	defer server.Close()
+
+	attempts, _, err := RunAvailability(t.Context(), server.Client(), AvailabilityRunOptions{
+		Request:       RequestOptions{Endpoint: server.URL + "/v1/chat/completions", Model: "test", Prompt: "test", MaxTokens: 1},
+		AdminEndpoint: server.URL + "/admin/workers", Duration: time.Second, Concurrency: 2, PollInterval: 10 * time.Millisecond, MaxRequests: 3,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(attempts) != 3 {
+		t.Fatalf("attempts = %d, want 3", len(attempts))
 	}
 }
 

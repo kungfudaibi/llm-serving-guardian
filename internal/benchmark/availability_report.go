@@ -40,6 +40,7 @@ type AvailabilityParameters struct {
 	Prompt          string        `json:"-"`
 	PromptSHA256    string        `json:"promptSha256"`
 	Concurrency     int           `json:"concurrency"`
+	MaxRequests     int           `json:"maxRequests,omitempty"`
 	MaxTokens       int           `json:"maxTokens"`
 	Temperature     float64       `json:"temperature"`
 	Duration        time.Duration `json:"-"`

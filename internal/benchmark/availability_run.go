@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"slices"
 	"sync"
+	"sync/atomic"
 	"time"
 )
 
@@ -18,6 +19,7 @@ type AvailabilityRunOptions struct {
 	Duration      time.Duration
 	Concurrency   int
 	PollInterval  time.Duration
+	MaxRequests   int
 }
 
 func RunAvailability(ctx context.Context, client *http.Client, options AvailabilityRunOptions) ([]AvailabilityAttempt, []WorkerObservation, error) {
@@ -29,6 +31,12 @@ func RunAvailability(ctx context.Context, client *http.Client, options Availabil
 	}
 	if options.AdminEndpoint == "" || options.PollInterval <= 0 {
 		return nil, nil, errors.New("admin endpoint and positive poll interval are required")
+	}
+	if options.MaxRequests == 0 {
+		options.MaxRequests = 100_000
+	}
+	if options.MaxRequests < 0 || options.MaxRequests > 1_000_000 {
+		return nil, nil, errors.New("max requests must be between 1 and 1000000")
 	}
 	if client == nil {
 		client = http.DefaultClient
@@ -61,12 +69,16 @@ func RunAvailability(ctx context.Context, client *http.Client, options Availabil
 	}()
 
 	var workers sync.WaitGroup
+	var nextRequest atomic.Int64
 	for range options.Concurrency {
 		workers.Add(1)
 		go func() {
 			defer workers.Done()
 			for time.Now().Before(stopAt) {
 				if ctx.Err() != nil {
+					return
+				}
+				if nextRequest.Add(1) > int64(options.MaxRequests) {
 					return
 				}
 				sample, err := Request(ctx, client, options.Request)
@@ -82,6 +94,9 @@ func RunAvailability(ctx context.Context, client *http.Client, options Availabil
 	polling.Wait()
 	slices.SortFunc(attempts, func(left, right AvailabilityAttempt) int { return left.StartedAt.Compare(right.StartedAt) })
 	slices.SortFunc(observations, func(left, right WorkerObservation) int { return left.ObservedAt.Compare(right.ObservedAt) })
+	if !hasWorkerEvidence(observations) {
+		return attempts, observations, errors.New("no successful worker observations")
+	}
 	return attempts, observations, nil
 }
 
@@ -93,24 +108,37 @@ func availabilityAttempt(sample Sample, requestErr error) AvailabilityAttempt {
 		E2EMS: float64(sample.E2E) / float64(time.Millisecond),
 	}
 	if requestErr != nil {
-		attempt.Error = requestErr.Error()
-		if len(attempt.Error) > 512 {
-			attempt.Error = attempt.Error[:512]
+		switch {
+		case sample.StreamStarted:
+			attempt.Error = "stream_incomplete"
+		case sample.Worker != "":
+			attempt.Error = "upstream_response_failed"
+		default:
+			attempt.Error = "request_failed"
 		}
 	}
 	return attempt
+}
+
+func hasWorkerEvidence(observations []WorkerObservation) bool {
+	for _, observation := range observations {
+		if observation.Error == "" && len(observation.Workers) > 0 {
+			return true
+		}
+	}
+	return false
 }
 
 func observeWorkers(ctx context.Context, client *http.Client, endpoint string) WorkerObservation {
 	observation := WorkerObservation{ObservedAt: time.Now().UTC()}
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, endpoint, nil)
 	if err != nil {
-		observation.Error = err.Error()
+		observation.Error = "create_admin_request"
 		return observation
 	}
 	resp, err := client.Do(req)
 	if err != nil {
-		observation.Error = err.Error()
+		observation.Error = "admin_request_failed"
 		return observation
 	}
 	defer resp.Body.Close()
@@ -119,7 +147,7 @@ func observeWorkers(ctx context.Context, client *http.Client, endpoint string) W
 		return observation
 	}
 	if err := json.NewDecoder(io.LimitReader(resp.Body, 1<<20)).Decode(&observation.Workers); err != nil {
-		observation.Error = fmt.Sprintf("decode workers: %v", err)
+		observation.Error = "decode_admin_response"
 	}
 	return observation
 }

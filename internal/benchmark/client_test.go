@@ -44,7 +44,7 @@ func TestRequestMeasuresStreamingResponseAndReadsUsage(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if sample.CompletionTokens != 2 || sample.TTFT <= 0 || sample.E2E < sample.TTFT {
+	if sample.CompletionTokens != 2 || !sample.StreamStarted || sample.E2E < sample.TTFT {
 		t.Fatalf("sample = %+v", sample)
 	}
 	if sample.Worker != "gpu-one" || sample.Attempts != 2 || sample.RequestID != "request-one" {

@@ -14,8 +14,6 @@ import (
 	"github.com/kungfudaibi/llm-serving-guardian/internal/benchmark"
 )
 
-const defaultPrompt = "Explain in concise English why fault-tolerant LLM serving matters. Give four numbered points."
-
 func main() {
 	if err := run(); err != nil {
 		fmt.Fprintf(os.Stderr, "benchmark: %v\n", err)
@@ -26,7 +24,7 @@ func main() {
 func run() error {
 	endpoint := flag.String("endpoint", "http://127.0.0.1:8090/v1/chat/completions", "OpenAI-compatible chat completions endpoint")
 	model := flag.String("model", "qwen2.5-1.5b-instruct", "served model name")
-	prompt := flag.String("prompt", defaultPrompt, "benchmark prompt (the report stores only its SHA-256 digest)")
+	prompt := flag.String("prompt", benchmark.DefaultPrompt, "benchmark prompt (the report stores only its SHA-256 digest)")
 	requests := flag.Int("requests", 64, "number of measured requests")
 	concurrency := flag.Int("concurrency", 1, "number of concurrent request workers")
 	warmup := flag.Int("warmup", 2, "number of sequential warmup requests")
@@ -85,7 +83,7 @@ func run() error {
 	}
 	encoded = append(encoded, '\n')
 	if *output != "" {
-		if err := writeReport(*output, encoded); err != nil {
+		if err := benchmark.WriteReport(*output, encoded); err != nil {
 			return fmt.Errorf("write report: %w", err)
 		}
 	}
@@ -93,16 +91,4 @@ func run() error {
 		return fmt.Errorf("print report: %w", err)
 	}
 	return nil
-}
-
-func writeReport(path string, data []byte) error {
-	file, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_EXCL, 0o644)
-	if err != nil {
-		return err
-	}
-	if _, err := file.Write(data); err != nil {
-		_ = file.Close()
-		return err
-	}
-	return file.Close()
 }

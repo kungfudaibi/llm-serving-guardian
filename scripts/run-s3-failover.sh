@@ -19,6 +19,10 @@ benchmark_pid=
 stop_pid() {
   local pid=$1
   if [[ -n "$pid" ]] && kill -0 "$pid" 2>/dev/null; then
+    local parent_pid
+    parent_pid=$(ps -o ppid= -p "$pid" 2>/dev/null)
+    parent_pid=${parent_pid//[[:space:]]/}
+    [[ "$parent_pid" == "$$" ]] || return
     kill -TERM "$pid" 2>/dev/null || true
     for _ in $(seq 1 20); do
       if ! kill -0 "$pid" 2>/dev/null; then
@@ -29,9 +33,14 @@ stop_pid() {
         wait "$pid" 2>/dev/null || true
         return
       fi
+      parent_pid=$(ps -o ppid= -p "$pid" 2>/dev/null)
+      parent_pid=${parent_pid//[[:space:]]/}
+      [[ "$parent_pid" == "$$" ]] || return
       sleep 0.25
     done
-    kill -KILL "$pid" 2>/dev/null || true
+    parent_pid=$(ps -o ppid= -p "$pid" 2>/dev/null)
+    parent_pid=${parent_pid//[[:space:]]/}
+    [[ "$parent_pid" == "$$" ]] && kill -KILL "$pid" 2>/dev/null || true
     wait "$pid" 2>/dev/null || true
   fi
 }
