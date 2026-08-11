@@ -80,7 +80,7 @@ It invokes:
 D:\Downloads\llama-b10343-bin-win-cuda-12.4-x64\llama-server.exe
 ```
 
-and sets `LLAMA_CACHE=F:\llm-serving-guardian\llama-cache` before downloading `ggml-org/gemma-3-1b-it-GGUF:Q4_K_M`. In another terminal:
+and loads `F:\llm-serving-guardian\models\gemma-3-1b-it-Q4_K_M.gguf`. If the file is absent, the launcher downloads the official 806 MB artifact through Windows HTTPS, verifies its length and official SHA-256 digest, and only then promotes the temporary file. In another terminal:
 
 ```powershell
 go run ./cmd/mock-worker -listen 127.0.0.1:8082 -name demo-worker

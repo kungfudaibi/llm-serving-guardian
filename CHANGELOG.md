@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.1.1] - 2026-08-11
+
+### Fixed
+
+- Download the Windows demo model through system HTTPS and load the local F-drive GGUF, avoiding llama.cpp's failing TLS path on this machine.
+
 ## [0.1.0] - 2026-08-11
 
 ### Added
