@@ -21,10 +21,18 @@ stop_pid() {
   if [[ -n "$pid" ]] && kill -0 "$pid" 2>/dev/null; then
     kill -TERM "$pid" 2>/dev/null || true
     for _ in $(seq 1 20); do
-      kill -0 "$pid" 2>/dev/null || return
+      if ! kill -0 "$pid" 2>/dev/null; then
+        wait "$pid" 2>/dev/null || true
+        return
+      fi
+      if [[ $(ps -o stat= -p "$pid" 2>/dev/null) == Z* ]]; then
+        wait "$pid" 2>/dev/null || true
+        return
+      fi
       sleep 0.25
     done
     kill -KILL "$pid" 2>/dev/null || true
+    wait "$pid" 2>/dev/null || true
   fi
 }
 
@@ -36,7 +44,7 @@ cleanup() {
 }
 trap cleanup EXIT INT TERM
 
-for command in curl go jq nvidia-smi ss; do
+for command in curl go jq nvidia-smi ps ss; do
   command -v "$command" >/dev/null || { echo "missing command: $command" >&2; exit 1; }
 done
 [[ -x "$venv/bin/vllm" ]] || { echo "missing vLLM environment: $venv" >&2; exit 1; }
@@ -74,7 +82,7 @@ wait_ready() {
   local url=$1
   local log=$2
   for _ in $(seq 1 60); do
-    curl -fsS --max-time 2 "$url" >/dev/null && return
+    curl -fsS --max-time 2 "$url" >/dev/null 2>&1 && return
     sleep 1
   done
   tail -n 80 "$log" >&2
