@@ -35,14 +35,19 @@ type WorkerObservation struct {
 
 type AvailabilityParameters struct {
 	Endpoint        string        `json:"endpoint"`
+	AdminEndpoint   string        `json:"adminEndpoint"`
 	Model           string        `json:"model"`
 	Prompt          string        `json:"-"`
 	PromptSHA256    string        `json:"promptSha256"`
 	Concurrency     int           `json:"concurrency"`
+	MaxTokens       int           `json:"maxTokens"`
+	Temperature     float64       `json:"temperature"`
 	Duration        time.Duration `json:"-"`
 	DurationSeconds float64       `json:"durationSeconds"`
 	TargetWorker    string        `json:"targetWorker"`
 	FaultInjectedAt time.Time     `json:"faultInjectedAt"`
+	Hardware        string        `json:"hardware,omitempty"`
+	Label           string        `json:"label,omitempty"`
 }
 
 type AvailabilitySummary struct {
@@ -74,6 +79,7 @@ func NewAvailabilityReport(parameters AvailabilityParameters, attempts []Availab
 	parameters.Prompt = ""
 	parameters.PromptSHA256 = hex.EncodeToString(digest[:])
 	parameters.Endpoint = reportEndpoint(parameters.Endpoint)
+	parameters.AdminEndpoint = reportEndpoint(parameters.AdminEndpoint)
 	parameters.DurationSeconds = parameters.Duration.Seconds()
 	parameters.Duration = 0
 	summary := AvailabilitySummary{Total: len(attempts), WorkerSuccesses: make(map[string]int)}
