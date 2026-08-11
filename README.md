@@ -147,7 +147,7 @@ docker run --rm -v "${PWD}:/src" -w /src golang:1.26.5-alpine3.24 `
 
 Tests use only loopback `httptest` workers; they do not download a model. For load experiments, record the hardware, model, quantization, context size, concurrency, and p50/p95/p99 instead of publishing unrepeatable headline numbers.
 
-The included streaming benchmark client produces raw samples plus TTFT, TPOT, E2E, request throughput, and output-token throughput summaries. See [BENCHMARKING.md](docs/BENCHMARKING.md) for the pinned V100 procedure and report format.
+The included streaming benchmark client produces raw samples plus TTFT, TPOT, E2E, request throughput, and output-token throughput summaries. See the [measured V100 baseline](benchmarks/README.md) and [reproduction procedure](docs/BENCHMARKING.md).
 
 ## Operational endpoints
 

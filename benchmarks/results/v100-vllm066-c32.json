@@ -1,0 +1,424 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-08-11T07:34:47.279392198Z",
+  "parameters": {
+    "endpoint": "http://127.0.0.1:8090/v1/chat/completions",
+    "model": "qwen2.5-1.5b-instruct",
+    "promptSha256": "84f883fa37ab8bc0f8024da58fc696f3b82a70cb6d9727ce34b9d37a1bc1715f",
+    "requests": 64,
+    "concurrency": 32,
+    "warmup": 2,
+    "maxTokens": 64,
+    "temperature": 0,
+    "hardware": "inspur3; 1x Tesla V100-PCIE-32GB; Xeon Gold 6132; vLLM 0.6.6; FP16; XFormers",
+    "label": "vllm066-qwen25-1.5b-fp16-guardian-c32"
+  },
+  "summary": {
+    "requests": 64,
+    "outputTokens": 4096,
+    "wallSeconds": 1.5719109310000001,
+    "requestsPerSecond": 40.71477507907221,
+    "outputTokensPerSecond": 2605.7456050606215,
+    "ttft": {
+      "p50Ms": 116.024684,
+      "p95Ms": 117.23168115,
+      "p99Ms": 117.61917998999999
+    },
+    "tpot": {
+      "p50Ms": 10.6230715,
+      "p95Ms": 10.672018699999999,
+      "p99Ms": 11.32069824
+    },
+    "e2e": {
+      "p50Ms": 785.3218045,
+      "p95Ms": 788.4418345,
+      "p99Ms": 788.78125363
+    }
+  },
+  "samples": [
+    {
+      "ttftMs": 70.595106,
+      "tpotMs": 11.353869,
+      "e2eMs": 785.888885,
+      "completionTokens": 64
+    },
+    {
+      "ttftMs": 116.813591,
+      "tpotMs": 10.662253,
+      "e2eMs": 788.535577,
+      "completionTokens": 64
+    },
+    {
+      "ttftMs": 116.894784,
+      "tpotMs": 10.663897,
+      "e2eMs": 788.720352,
+      "completionTokens": 64
+    },
+    {
+      "ttftMs": 116.120405,
+      "tpotMs": 10.617918,
+      "e2eMs": 785.04926,
+      "completionTokens": 64
+    },
+    {
+      "ttftMs": 116.830328,
+      "tpotMs": 10.660527,
+      "e2eMs": 788.443582,
+      "completionTokens": 64
+    },
+    {
+      "ttftMs": 116.555679,
+      "tpotMs": 10.664702,
+      "e2eMs": 788.431932,
+      "completionTokens": 64
+    },
+    {
+      "ttftMs": 115.699648,
+      "tpotMs": 10.636094,
+      "e2eMs": 785.773617,
+      "completionTokens": 64
+    },
+    {
+      "ttftMs": 116.456116,
+      "tpotMs": 10.642155,
+      "e2eMs": 786.911935,
+      "completionTokens": 64
+    },
+    {
+      "ttftMs": 116.571866,
+      "tpotMs": 10.643491,
+      "e2eMs": 787.111803,
+      "completionTokens": 64
+    },
+    {
+      "ttftMs": 115.489398,
+      "tpotMs": 10.637466,
+      "e2eMs": 785.649817,
+      "completionTokens": 64
+    },
+    {
+      "ttftMs": 116.367142,
+      "tpotMs": 10.622225,
+      "e2eMs": 785.567367,
+      "completionTokens": 64
+    },
+    {
+      "ttftMs": 116.511524,
+      "tpotMs": 10.642974,
+      "e2eMs": 787.018903,
+      "completionTokens": 64
+    },
+    {
+      "ttftMs": 116.3997,
+      "tpotMs": 10.645324,
+      "e2eMs": 787.055113,
+      "completionTokens": 64
+    },
+    {
+      "ttftMs": 116.313062,
+      "tpotMs": 10.665268,
+      "e2eMs": 788.224994,
+      "completionTokens": 64
+    },
+    {
+      "ttftMs": 116.542253,
+      "tpotMs": 10.624497,
+      "e2eMs": 785.885586,
+      "completionTokens": 64
+    },
+    {
+      "ttftMs": 116.520452,
+      "tpotMs": 10.640048,
+      "e2eMs": 786.843501,
+      "completionTokens": 64
+    },
+    {
+      "ttftMs": 116.472672,
+      "tpotMs": 10.67321,
+      "e2eMs": 788.884951,
+      "completionTokens": 64
+    },
+    {
+      "ttftMs": 116.460514,
+      "tpotMs": 10.640178,
+      "e2eMs": 786.791762,
+      "completionTokens": 64
+    },
+    {
+      "ttftMs": 114.811574,
+      "tpotMs": 10.636539,
+      "e2eMs": 784.913537,
+      "completionTokens": 64
+    },
+    {
+      "ttftMs": 115.910989,
+      "tpotMs": 10.645864,
+      "e2eMs": 786.600469,
+      "completionTokens": 64
+    },
+    {
+      "ttftMs": 115.827566,
+      "tpotMs": 10.643669,
+      "e2eMs": 786.378769,
+      "completionTokens": 64
+    },
+    {
+      "ttftMs": 114.848393,
+      "tpotMs": 10.636646,
+      "e2eMs": 784.957142,
+      "completionTokens": 64
+    },
+    {
+      "ttftMs": 115.993672,
+      "tpotMs": 10.623918,
+      "e2eMs": 785.300507,
+      "completionTokens": 64
+    },
+    {
+      "ttftMs": 114.756683,
+      "tpotMs": 10.635505,
+      "e2eMs": 784.793526,
+      "completionTokens": 64
+    },
+    {
+      "ttftMs": 114.797775,
+      "tpotMs": 10.657858,
+      "e2eMs": 786.242874,
+      "completionTokens": 64
+    },
+    {
+      "ttftMs": 115.935983,
+      "tpotMs": 10.641892,
+      "e2eMs": 786.375221,
+      "completionTokens": 64
+    },
+    {
+      "ttftMs": 114.763278,
+      "tpotMs": 10.655535,
+      "e2eMs": 786.062009,
+      "completionTokens": 64
+    },
+    {
+      "ttftMs": 115.543673,
+      "tpotMs": 10.664886,
+      "e2eMs": 787.431499,
+      "completionTokens": 64
+    },
+    {
+      "ttftMs": 115.809452,
+      "tpotMs": 10.639193,
+      "e2eMs": 786.07862,
+      "completionTokens": 64
+    },
+    {
+      "ttftMs": 114.663345,
+      "tpotMs": 10.636787,
+      "e2eMs": 784.780956,
+      "completionTokens": 64
+    },
+    {
+      "ttftMs": 114.614594,
+      "tpotMs": 10.636768,
+      "e2eMs": 784.731001,
+      "completionTokens": 64
+    },
+    {
+      "ttftMs": 114.968491,
+      "tpotMs": 10.65347,
+      "e2eMs": 786.137132,
+      "completionTokens": 64
+    },
+    {
+      "ttftMs": 117.00979,
+      "tpotMs": 10.611029,
+      "e2eMs": 785.504649,
+      "completionTokens": 64
+    },
+    {
+      "ttftMs": 117.809394,
+      "tpotMs": 10.605605,
+      "e2eMs": 785.962533,
+      "completionTokens": 64
+    },
+    {
+      "ttftMs": 117.507467,
+      "tpotMs": 10.602091,
+      "e2eMs": 785.439224,
+      "completionTokens": 64
+    },
+    {
+      "ttftMs": 117.039756,
+      "tpotMs": 10.610099,
+      "e2eMs": 785.475997,
+      "completionTokens": 64
+    },
+    {
+      "ttftMs": 116.602314,
+      "tpotMs": 10.614933,
+      "e2eMs": 785.343102,
+      "completionTokens": 64
+    },
+    {
+      "ttftMs": 117.255756,
+      "tpotMs": 10.598889,
+      "e2eMs": 784.98581,
+      "completionTokens": 64
+    },
+    {
+      "ttftMs": 73.518395,
+      "tpotMs": 11.301217,
+      "e2eMs": 785.495093,
+      "completionTokens": 64
+    },
+    {
+      "ttftMs": 117.433675,
+      "tpotMs": 10.605776,
+      "e2eMs": 785.597596,
+      "completionTokens": 64
+    },
+    {
+      "ttftMs": 116.54164,
+      "tpotMs": 10.609287,
+      "e2eMs": 784.926732,
+      "completionTokens": 64
+    },
+    {
+      "ttftMs": 115.685871,
+      "tpotMs": 10.613162,
+      "e2eMs": 784.315104,
+      "completionTokens": 64
+    },
+    {
+      "ttftMs": 117.095257,
+      "tpotMs": 10.602103,
+      "e2eMs": 785.027771,
+      "completionTokens": 64
+    },
+    {
+      "ttftMs": 117.055753,
+      "tpotMs": 10.603111,
+      "e2eMs": 785.051767,
+      "completionTokens": 64
+    },
+    {
+      "ttftMs": 115.792954,
+      "tpotMs": 10.611345,
+      "e2eMs": 784.307742,
+      "completionTokens": 64
+    },
+    {
+      "ttftMs": 116.20275,
+      "tpotMs": 10.600484,
+      "e2eMs": 784.033249,
+      "completionTokens": 64
+    },
+    {
+      "ttftMs": 116.397027,
+      "tpotMs": 10.59971,
+      "e2eMs": 784.178761,
+      "completionTokens": 64
+    },
+    {
+      "ttftMs": 72.180908,
+      "tpotMs": 11.296076,
+      "e2eMs": 783.833698,
+      "completionTokens": 64
+    },
+    {
+      "ttftMs": 116.088968,
+      "tpotMs": 10.60465,
+      "e2eMs": 784.181971,
+      "completionTokens": 64
+    },
+    {
+      "ttftMs": 116.386098,
+      "tpotMs": 10.601498,
+      "e2eMs": 784.280475,
+      "completionTokens": 64
+    },
+    {
+      "ttftMs": 116.055696,
+      "tpotMs": 10.607892,
+      "e2eMs": 784.352953,
+      "completionTokens": 64
+    },
+    {
+      "ttftMs": 116.558205,
+      "tpotMs": 10.594901,
+      "e2eMs": 784.036974,
+      "completionTokens": 64
+    },
+    {
+      "ttftMs": 116.199715,
+      "tpotMs": 10.59854,
+      "e2eMs": 783.907763,
+      "completionTokens": 64
+    },
+    {
+      "ttftMs": 115.175349,
+      "tpotMs": 10.609499,
+      "e2eMs": 783.573822,
+      "completionTokens": 64
+    },
+    {
+      "ttftMs": 115.755853,
+      "tpotMs": 10.606862,
+      "e2eMs": 783.988204,
+      "completionTokens": 64
+    },
+    {
+      "ttftMs": 115.955401,
+      "tpotMs": 10.597197,
+      "e2eMs": 783.578855,
+      "completionTokens": 64
+    },
+    {
+      "ttftMs": 115.700025,
+      "tpotMs": 10.606996,
+      "e2eMs": 783.940802,
+      "completionTokens": 64
+    },
+    {
+      "ttftMs": 115.069339,
+      "tpotMs": 10.600415,
+      "e2eMs": 782.895535,
+      "completionTokens": 64
+    },
+    {
+      "ttftMs": 114.801692,
+      "tpotMs": 10.603165,
+      "e2eMs": 782.801111,
+      "completionTokens": 64
+    },
+    {
+      "ttftMs": 113.882179,
+      "tpotMs": 10.61381,
+      "e2eMs": 782.552246,
+      "completionTokens": 64
+    },
+    {
+      "ttftMs": 113.799784,
+      "tpotMs": 10.6112,
+      "e2eMs": 782.305393,
+      "completionTokens": 64
+    },
+    {
+      "ttftMs": 114.612349,
+      "tpotMs": 10.598656,
+      "e2eMs": 782.3277,
+      "completionTokens": 64
+    },
+    {
+      "ttftMs": 113.646843,
+      "tpotMs": 10.610878,
+      "e2eMs": 782.132189,
+      "completionTokens": 64
+    },
+    {
+      "ttftMs": 113.983205,
+      "tpotMs": 10.602285,
+      "e2eMs": 781.927164,
+      "completionTokens": 64
+    }
+  ]
+}
