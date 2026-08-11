@@ -112,7 +112,7 @@ Every service has `restart: "no"`; Docker Desktop reopening will not automatical
 
 ## Configuration
 
-Guardian accepts one strict JSON file through `-config`. Unknown fields and unsafe values fail startup. `${ENVIRONMENT_VARIABLE}` placeholders are expanded before decoding.
+Guardian accepts one strict JSON file through `-config`. Unknown fields, unsafe values, and references to unset environment variables fail startup. `${ENVIRONMENT_VARIABLE}` placeholders are expanded before decoding.
 
 ```json
 {

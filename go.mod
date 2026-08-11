@@ -1,4 +1,4 @@
-module github.com/zhaowenjie/llm-serving-guardian
+module github.com/kungfudaibi/llm-serving-guardian
 
 go 1.26
 

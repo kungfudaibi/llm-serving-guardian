@@ -46,13 +46,17 @@ func NewProxy(pool *Pool, client *http.Client, options ProxyOptions) *Proxy {
 	if client == nil {
 		client = http.DefaultClient
 	}
+	clientCopy := *client
+	clientCopy.CheckRedirect = func(_ *http.Request, _ []*http.Request) error {
+		return http.ErrUseLastResponse
+	}
 	if options.Limiter == nil {
 		options.Limiter = NewLimiter(0, 1)
 	}
 	if options.Logger == nil {
 		options.Logger = slog.New(slog.NewJSONHandler(io.Discard, nil))
 	}
-	return &Proxy{pool: pool, client: client, options: options}
+	return &Proxy{pool: pool, client: &clientCopy, options: options}
 }
 
 func (p *Proxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {

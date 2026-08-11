@@ -13,7 +13,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/zhaowenjie/llm-serving-guardian/internal/config"
+	"github.com/kungfudaibi/llm-serving-guardian/internal/config"
 )
 
 func TestProxyForwardsRequestAndConfiguredAuthorization(t *testing.T) {
@@ -70,6 +70,25 @@ func TestProxyRetriesFiveHundredOnAnotherWorker(t *testing.T) {
 	}
 	if recorder.Header().Get("X-Guardian-Attempts") != "2" {
 		t.Fatalf("attempt header = %q", recorder.Header().Get("X-Guardian-Attempts"))
+	}
+}
+
+func TestProxyDoesNotFollowUpstreamRedirects(t *testing.T) {
+	redirectTarget := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		t.Fatal("guardian followed an upstream redirect")
+	}))
+	defer redirectTarget.Close()
+	upstream := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		http.Redirect(w, &http.Request{}, redirectTarget.URL, http.StatusTemporaryRedirect)
+	}))
+	defer upstream.Close()
+
+	proxy, pool := testProxy(t, []config.Worker{{Name: "one", URL: upstream.URL}}, 1, 1024)
+	pool.ReportSuccess("one")
+	recorder := httptest.NewRecorder()
+	proxy.ServeHTTP(recorder, httptest.NewRequest(http.MethodPost, "/v1/chat/completions", nil))
+	if recorder.Code != http.StatusTemporaryRedirect || recorder.Header().Get("Location") != redirectTarget.URL {
+		t.Fatalf("redirect response = %d Location=%q", recorder.Code, recorder.Header().Get("Location"))
 	}
 }
 

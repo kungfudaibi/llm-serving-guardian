@@ -80,3 +80,18 @@ func TestLoadRejectsTrailingJSON(t *testing.T) {
 		t.Fatal("Load() error = nil, want trailing JSON error")
 	}
 }
+
+func TestLoadRejectsMissingEnvironmentVariable(t *testing.T) {
+	t.Setenv("GUARDIAN_TEST_MISSING_KEY", "temporary")
+	if err := os.Unsetenv("GUARDIAN_TEST_MISSING_KEY"); err != nil {
+		t.Fatal(err)
+	}
+	path := filepath.Join(t.TempDir(), "guardian.json")
+	data := `{"workers":[{"name":"a","url":"http://127.0.0.1:1","apiKey":"${GUARDIAN_TEST_MISSING_KEY}"}]}`
+	if err := os.WriteFile(path, []byte(data), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := Load(path); err == nil {
+		t.Fatal("Load() error = nil, want missing environment error")
+	}
+}

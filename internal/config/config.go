@@ -99,7 +99,11 @@ func Load(path string) (Config, error) {
 	}
 
 	raw := defaultRawConfig()
-	decoder := json.NewDecoder(bytes.NewReader([]byte(os.ExpandEnv(string(data)))))
+	expanded, missing := expandEnvironment(string(data))
+	if len(missing) > 0 {
+		return Config{}, fmt.Errorf("expand config: environment variable %q is not set", missing[0])
+	}
+	decoder := json.NewDecoder(bytes.NewReader([]byte(expanded)))
 	decoder.DisallowUnknownFields()
 	if err := decoder.Decode(&raw); err != nil {
 		return Config{}, fmt.Errorf("decode config: %w", err)
@@ -178,6 +182,18 @@ func Load(path string) (Config, error) {
 		Proxy:   Proxy{MaxAttempts: raw.Proxy.MaxAttempts},
 		Workers: raw.Workers,
 	}, nil
+}
+
+func expandEnvironment(value string) (string, []string) {
+	missing := make([]string, 0)
+	expanded := os.Expand(value, func(name string) string {
+		replacement, ok := os.LookupEnv(name)
+		if !ok {
+			missing = append(missing, name)
+		}
+		return replacement
+	})
+	return expanded, missing
 }
 
 func positiveDuration(field, value string) (time.Duration, error) {

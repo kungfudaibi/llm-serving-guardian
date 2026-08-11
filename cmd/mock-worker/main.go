@@ -7,7 +7,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/zhaowenjie/llm-serving-guardian/internal/mockworker"
+	"github.com/kungfudaibi/llm-serving-guardian/internal/mockworker"
 )
 
 func main() {

@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/zhaowenjie/llm-serving-guardian/internal/config"
+	"github.com/kungfudaibi/llm-serving-guardian/internal/config"
 )
 
 func TestHealthCheckerMarksSuccessAndFailure(t *testing.T) {

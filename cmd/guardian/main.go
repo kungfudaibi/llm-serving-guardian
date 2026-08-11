@@ -12,9 +12,9 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/zhaowenjie/llm-serving-guardian/internal/config"
-	"github.com/zhaowenjie/llm-serving-guardian/internal/guardian"
-	"github.com/zhaowenjie/llm-serving-guardian/internal/telemetry"
+	"github.com/kungfudaibi/llm-serving-guardian/internal/config"
+	"github.com/kungfudaibi/llm-serving-guardian/internal/guardian"
+	"github.com/kungfudaibi/llm-serving-guardian/internal/telemetry"
 )
 
 func main() {

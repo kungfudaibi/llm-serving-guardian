@@ -6,7 +6,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/zhaowenjie/llm-serving-guardian/internal/config"
+	"github.com/kungfudaibi/llm-serving-guardian/internal/config"
 )
 
 // Worker is an immutable upstream target selected by the pool.
