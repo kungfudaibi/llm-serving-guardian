@@ -1,0 +1,16 @@
+{
+  "server": {
+    "listen": "127.0.0.1:8090",
+    "requestTimeout": "5m",
+    "shutdownTimeout": "10s",
+    "maxBodyBytes": 10485760,
+    "rateLimitRPS": 100,
+    "rateLimitBurst": 200
+  },
+  "health": {"interval": "2s", "timeout": "1s"},
+  "circuit": {"failureThreshold": 2, "cooldown": "5s"},
+  "proxy": {"maxAttempts": 1},
+  "workers": [
+    {"name": "vllm-gpu0", "url": "http://127.0.0.1:8000"}
+  ]
+}
