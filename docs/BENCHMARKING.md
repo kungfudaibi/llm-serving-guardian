@@ -55,3 +55,13 @@ go run ./cmd/benchmark \
 If authentication is enabled, set `BENCHMARK_API_KEY`; it is sent as a bearer token and is never written to the report. Keep server and Guardian logs alongside the experiment metadata when diagnosing an outlier, but do not commit secrets or prompt bodies.
 
 For claims beyond an initial baseline, run at least three independent repetitions per concurrency after a fresh warmup and report the variation. A single run is useful evidence, but it is not a capacity guarantee.
+
+## Inject a real worker failure
+
+On the configured s3 host, the following script checks that both GPUs and ports are idle, starts one vLLM worker per V100, runs continuous streaming traffic, terminates GPU0, restarts it, and cleans up only the exact processes it created:
+
+```bash
+./scripts/run-s3-failover.sh
+```
+
+The availability client continues after individual request failures and polls `/admin/workers` throughout the experiment. Its report records request-level routing, retries, stream state, worker snapshots, the exact fault timestamp, circuit detection, and recovery. Runtime binaries and logs remain under `$HOME/.cache/llm-serving-guardian/failover/`; the auditable JSON report is written under `benchmarks/results/` without overwriting an existing result.
