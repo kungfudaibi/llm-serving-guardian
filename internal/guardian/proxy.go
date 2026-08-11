@@ -108,6 +108,7 @@ func (p *Proxy) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			lastFailure = fmt.Errorf("upstream status %d", resp.StatusCode)
 			p.pool.ReportFailure(worker.Name, lastFailure)
 			p.observe(worker.Name, "5xx", duration)
+			p.options.Logger.Warn("upstream attempt failed", "event", "upstream_attempt_failed", "requestId", requestID, "worker", worker.Name, "attempt", attempt, "status", resp.StatusCode, "error", lastFailure.Error())
 			continue
 		}
 

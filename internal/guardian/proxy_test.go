@@ -73,6 +73,47 @@ func TestProxyRetriesFiveHundredOnAnotherWorker(t *testing.T) {
 	}
 }
 
+func TestProxyLogsFiveHundredAttemptBeforeRetry(t *testing.T) {
+	first := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		http.Error(w, "failed", http.StatusServiceUnavailable)
+	}))
+	defer first.Close()
+	second := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		_, _ = w.Write([]byte("recovered"))
+	}))
+	defer second.Close()
+
+	pool, err := NewPool([]config.Worker{
+		{Name: "one", URL: first.URL}, {Name: "two", URL: second.URL},
+	}, 2, time.Second)
+	if err != nil {
+		t.Fatal(err)
+	}
+	pool.ReportSuccess("one")
+	pool.ReportSuccess("two")
+	var logs bytes.Buffer
+	proxy := NewProxy(pool, &http.Client{}, ProxyOptions{
+		MaxAttempts: 2, MaxBodyBytes: 1024, RequestTimeout: time.Second,
+		Limiter: NewLimiter(0, 1), Logger: slog.New(slog.NewJSONHandler(&logs, nil)),
+	})
+	req := httptest.NewRequest(http.MethodPost, "/v1/chat/completions", nil)
+	req.Header.Set("X-Request-Id", "request-503")
+	proxy.ServeHTTP(httptest.NewRecorder(), req)
+
+	var event map[string]any
+	if err := json.Unmarshal(bytes.TrimSpace(logs.Bytes()), &event); err != nil {
+		t.Fatalf("decode log: %v; output = %q", err, logs.String())
+	}
+	if event["event"] != "upstream_attempt_failed" ||
+		event["requestId"] != "request-503" ||
+		event["worker"] != "one" ||
+		event["attempt"] != float64(1) ||
+		event["status"] != float64(http.StatusServiceUnavailable) ||
+		event["error"] != "upstream status 503" {
+		t.Fatalf("unexpected log event: %#v", event)
+	}
+}
+
 func TestProxyDoesNotFollowUpstreamRedirects(t *testing.T) {
 	redirectTarget := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		t.Fatal("guardian followed an upstream redirect")
