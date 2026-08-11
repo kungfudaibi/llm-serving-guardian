@@ -1,0 +1,50 @@
+services:
+  guardian:
+    build:
+      context: .
+      target: guardian
+    restart: "no"
+    ports:
+      - "127.0.0.1:8090:8090"
+    depends_on:
+      mock-one:
+        condition: service_healthy
+      mock-two:
+        condition: service_healthy
+
+  mock-one:
+    build:
+      context: .
+      target: mock-worker
+    command: ["-listen", "0.0.0.0:8082", "-name", "mock-one"]
+    restart: "no"
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "-", "http://127.0.0.1:8082/health"]
+      interval: 2s
+      timeout: 1s
+      retries: 10
+
+  mock-two:
+    build:
+      context: .
+      target: mock-worker
+    command: ["-listen", "0.0.0.0:8082", "-name", "mock-two"]
+    restart: "no"
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "-", "http://127.0.0.1:8082/health"]
+      interval: 2s
+      timeout: 1s
+      retries: 10
+
+  prometheus:
+    image: prom/prometheus:v3.13.1
+    restart: "no"
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.retention.time=1d"
+    volumes:
+      - ./deploy/prometheus:/etc/prometheus:ro
+    ports:
+      - "127.0.0.1:9090:9090"
+    depends_on:
+      - guardian

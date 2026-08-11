@@ -1,0 +1,17 @@
+{
+  "server": {
+    "listen": "127.0.0.1:8090",
+    "requestTimeout": "30s",
+    "shutdownTimeout": "5s",
+    "maxBodyBytes": 1048576,
+    "rateLimitRPS": 20,
+    "rateLimitBurst": 40
+  },
+  "health": {"interval": "2s", "timeout": "1s"},
+  "circuit": {"failureThreshold": 2, "cooldown": "5s"},
+  "proxy": {"maxAttempts": 2},
+  "workers": [
+    {"name": "mock-one", "url": "http://127.0.0.1:18081"},
+    {"name": "mock-two", "url": "http://127.0.0.1:18082"}
+  ]
+}

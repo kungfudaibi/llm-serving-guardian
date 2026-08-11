@@ -1,0 +1,23 @@
+groups:
+  - name: llm-serving-guardian
+    rules:
+      - alert: GuardianNoHealthyWorkers
+        expr: sum(llm_guardian_worker_healthy) == 0
+        for: 1m
+        labels:
+          severity: page
+        annotations:
+          summary: No inference worker is healthy
+          runbook_url: docs/RUNBOOK.md#no-healthy-workers
+      - alert: GuardianHighServerErrorRate
+        expr: |
+          sum(rate(llm_guardian_http_requests_total{route="/v1/*",status_class="5xx"}[5m]))
+          /
+          clamp_min(sum(rate(llm_guardian_http_requests_total{route="/v1/*"}[5m])), 0.001)
+          > 0.05
+        for: 5m
+        labels:
+          severity: page
+        annotations:
+          summary: More than 5% of inference requests return 5xx
+          runbook_url: docs/RUNBOOK.md#high-server-error-rate
