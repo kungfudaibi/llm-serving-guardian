@@ -95,3 +95,13 @@ func TestLoadRejectsMissingEnvironmentVariable(t *testing.T) {
 		t.Fatal("Load() error = nil, want missing environment error")
 	}
 }
+
+func TestRepositoryDualVLLMConfigEnablesTwoAttemptFailover(t *testing.T) {
+	cfg, err := Load(filepath.Join("..", "..", "configs", "s3-vllm-dual.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(cfg.Workers) != 2 || cfg.Proxy.MaxAttempts != 2 || cfg.Circuit.FailureThreshold != 1 {
+		t.Fatalf("dual VLLM failover config = %+v", cfg)
+	}
+}
