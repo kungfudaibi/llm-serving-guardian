@@ -2,10 +2,66 @@ package benchmark
 
 import (
 	"encoding/json"
+	"fmt"
+	"net/http"
+	"net/http/httptest"
 	"strings"
+	"sync/atomic"
 	"testing"
 	"time"
 )
+
+func TestRunAvailabilityContinuesAfterIndividualFailuresAndPollsWorkers(t *testing.T) {
+	var calls atomic.Int64
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/admin/workers":
+			w.Header().Set("Content-Type", "application/json")
+			fmt.Fprint(w, `[{"name":"gpu-zero","isHealthy":true,"circuitState":"CLOSED"}]`)
+		case "/v1/chat/completions":
+			time.Sleep(5 * time.Millisecond)
+			w.Header().Set("X-Guardian-Worker", "gpu-zero")
+			w.Header().Set("X-Guardian-Attempts", "1")
+			if calls.Add(1)%2 == 0 {
+				http.Error(w, "injected failure", http.StatusBadGateway)
+				return
+			}
+			fmt.Fprint(w, "data: {\"choices\":[{\"delta\":{\"content\":\"ok\"}}]}\n\n")
+			fmt.Fprint(w, "data: {\"choices\":[],\"usage\":{\"completion_tokens\":1}}\n\n")
+			fmt.Fprint(w, "data: [DONE]\n\n")
+		default:
+			http.NotFound(w, r)
+		}
+	}))
+	defer server.Close()
+
+	attempts, observations, err := RunAvailability(t.Context(), server.Client(), AvailabilityRunOptions{
+		Request:       RequestOptions{Endpoint: server.URL + "/v1/chat/completions", Model: "test", Prompt: "test", MaxTokens: 1},
+		AdminEndpoint: server.URL + "/admin/workers", Duration: 50 * time.Millisecond, Concurrency: 2, PollInterval: 10 * time.Millisecond,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	var successes, failures int
+	for _, attempt := range attempts {
+		if attempt.Success {
+			successes++
+		} else {
+			failures++
+		}
+	}
+	if successes == 0 || failures == 0 || len(attempts) < 4 {
+		t.Fatalf("attempts did not continue across errors: %+v", attempts)
+	}
+	if len(observations) < 2 || len(observations[0].Workers) != 1 {
+		t.Fatalf("worker observations = %+v", observations)
+	}
+	for index := 1; index < len(attempts); index++ {
+		if attempts[index].StartedAt.Before(attempts[index-1].StartedAt) {
+			t.Fatalf("attempts are not chronological: %+v", attempts)
+		}
+	}
+}
 
 func TestNewAvailabilityReportSummarizesFaultImpactAndRecovery(t *testing.T) {
 	started := time.Date(2026, 8, 11, 8, 0, 0, 0, time.UTC)

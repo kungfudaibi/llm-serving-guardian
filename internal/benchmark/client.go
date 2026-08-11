@@ -104,6 +104,7 @@ func Request(ctx context.Context, client *http.Client, options RequestOptions) (
 			if firstToken.IsZero() && choice.Delta.Content != "" {
 				firstToken = time.Now()
 				sample.TTFT = firstToken.Sub(started)
+				sample.StreamStarted = true
 			}
 		}
 		if chunk.Usage != nil {

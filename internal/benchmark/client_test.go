@@ -89,7 +89,7 @@ func TestRequestPreservesMetadataWhenStreamFails(t *testing.T) {
 	if sample.Worker != "gpu-zero" || sample.Attempts != 1 || sample.RequestID != "request-failed" {
 		t.Fatalf("routing metadata = %+v", sample)
 	}
-	if sample.StartedAt.IsZero() || sample.FinishedAt.Before(sample.StartedAt) || sample.E2E <= 0 {
+	if sample.StartedAt.IsZero() || sample.FinishedAt.Before(sample.StartedAt) || !sample.StreamStarted {
 		t.Fatalf("failed request timestamps = %+v", sample)
 	}
 }

@@ -14,6 +14,7 @@ type Sample struct {
 	Worker           string
 	Attempts         int
 	RequestID        string
+	StreamStarted    bool
 }
 
 type LatencyStats struct {

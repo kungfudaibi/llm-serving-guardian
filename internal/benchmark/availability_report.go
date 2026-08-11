@@ -30,6 +30,7 @@ type ObservedWorker struct {
 type WorkerObservation struct {
 	ObservedAt time.Time        `json:"observedAt"`
 	Workers    []ObservedWorker `json:"workers"`
+	Error      string           `json:"error,omitempty"`
 }
 
 type AvailabilityParameters struct {
