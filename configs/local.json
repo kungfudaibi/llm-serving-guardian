@@ -1,0 +1,31 @@
+{
+  "server": {
+    "listen": "127.0.0.1:8090",
+    "requestTimeout": "5m",
+    "shutdownTimeout": "10s",
+    "maxBodyBytes": 10485760,
+    "rateLimitRPS": 10,
+    "rateLimitBurst": 20
+  },
+  "health": {
+    "interval": "5s",
+    "timeout": "2s"
+  },
+  "circuit": {
+    "failureThreshold": 3,
+    "cooldown": "15s"
+  },
+  "proxy": {
+    "maxAttempts": 2
+  },
+  "workers": [
+    {
+      "name": "llama-local",
+      "url": "http://127.0.0.1:8081"
+    },
+    {
+      "name": "demo-worker",
+      "url": "http://127.0.0.1:8082"
+    }
+  ]
+}
