@@ -29,3 +29,14 @@ func TestNewReportIncludesRawSamplesAndPromptDigest(t *testing.T) {
 		t.Fatal("report contains the prompt instead of only its digest")
 	}
 }
+
+func TestNewReportRedactsEndpointCredentialsAndQuery(t *testing.T) {
+	report := NewReport(ReportParameters{
+		Endpoint: "https://user:password@example.com/v1/chat/completions?api_key=secret#fragment",
+		Prompt:   "test",
+	}, nil, 0)
+
+	if report.Parameters.Endpoint != "https://example.com/v1/chat/completions" {
+		t.Fatalf("endpoint = %q", report.Parameters.Endpoint)
+	}
+}

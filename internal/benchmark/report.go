@@ -3,6 +3,7 @@ package benchmark
 import (
 	"crypto/sha256"
 	"encoding/hex"
+	"net/url"
 	"time"
 )
 
@@ -39,6 +40,7 @@ func NewReport(parameters ReportParameters, samples []Sample, wall time.Duration
 	digest := sha256.Sum256([]byte(parameters.Prompt))
 	parameters.Prompt = ""
 	parameters.PromptSHA256 = hex.EncodeToString(digest[:])
+	parameters.Endpoint = reportEndpoint(parameters.Endpoint)
 	raw := make([]SampleMetrics, 0, len(samples))
 	for _, sample := range samples {
 		metrics := SampleMetrics{
@@ -58,4 +60,16 @@ func NewReport(parameters ReportParameters, samples []Sample, wall time.Duration
 		Summary:       Summarize(samples, wall),
 		Samples:       raw,
 	}
+}
+
+func reportEndpoint(endpoint string) string {
+	parsed, err := url.Parse(endpoint)
+	if err != nil {
+		return "[invalid endpoint redacted]"
+	}
+	parsed.User = nil
+	parsed.RawQuery = ""
+	parsed.ForceQuery = false
+	parsed.Fragment = ""
+	return parsed.String()
 }
