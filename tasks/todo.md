@@ -1,0 +1,25 @@
+# Task Checklist
+
+- [ ] Task 1: Bootstrap configuration and CLI
+  - Acceptance: valid JSON loads; invalid addresses, durations, and worker sets fail fast.
+  - Verify: `go test ./internal/config` and `go build ./cmd/guardian`.
+  - Files: `go.mod`, `cmd/guardian/main.go`, `internal/config/*`.
+- [ ] Task 2: Implement resilient worker pool
+  - Acceptance: healthy workers rotate; failures open a circuit; cooldown and probes recover it.
+  - Verify: focused pool tests and `go test -race ./internal/guardian`.
+  - Files: `internal/guardian/worker.go`, `internal/guardian/pool.go`, tests.
+- [ ] Task 3: Implement the guarded proxy
+  - Acceptance: requests stream successfully; pre-header failures retry another worker; limits return structured errors.
+  - Verify: proxy integration tests with localhost fake workers.
+  - Files: proxy, limiter, HTTP tests.
+- [ ] Task 4: Add operations surfaces
+  - Acceptance: health, readiness, worker snapshot, bounded metrics, JSON logs, and graceful shutdown work.
+  - Verify: endpoint tests and actual log/metrics spot checks.
+  - Files: server, telemetry, main, tests.
+- [ ] Task 5: Add reproducible demo and packaging
+  - Acceptance: one command starts a mock demo; Windows script uses the installed llama.cpp path and F-drive cache; Compose never auto-restarts.
+  - Verify: scripts parse, Docker config renders, smoke requests succeed.
+  - Files: mock worker, scripts, configs, Docker/deploy files, docs.
+- [ ] Task 6: Release gate
+  - Acceptance: full tests, race detector, vet, build, runtime smoke, docs, and secret scan are clean.
+  - Verify: commands recorded in README and executed locally.
